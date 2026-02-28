@@ -1,22 +1,13 @@
-📚 Goodreads Book Recommendation System
-📌 Project Overview
+Goodreads Book Recommendation System
+Overview
 
-This project implements multiple recommendation approaches using the Goodreads (Goodbooks-10k) dataset.
+This project implements and compares multiple recommendation strategies using the Goodreads (Goodbooks-10k) dataset.
 
-The objective is to build and compare different recommendation strategies to understand:
+The objective is to analyze how different recommendation approaches behave under high data sparsity and to understand their scalability, personalization capability, and suitability for cold start scenarios.
 
-Popularity-based recommendations
+Dataset: https://www.kaggle.com/datasets/zygmunt/goodbooks-10k
 
-Memory-based collaborative filtering
-
-Model-based collaborative filtering
-
-Cold start challenges in recommender systems
-
-Dataset Source:
-https://www.kaggle.com/datasets/zygmunt/goodbooks-10k
-
-📂 Project Structure
+Project Structure
 Goodreads-Book-Recommendation-System/
 │
 ├── rank_based_book_recommendation.ipynb
@@ -26,99 +17,96 @@ Goodreads-Book-Recommendation-System/
 └── data/
     ├── books.csv
     ├── ratings.csv
-📊 Dataset Information
+Dataset Statistics
 
-Number of users: 53,424
+Number of Users: 53,424
 
-Number of books: 10,000
+Number of Books: 10,000
 
-Total ratings: 981,756
+Total Ratings: 981,756
 
 Sparsity: ~99.8%
 
-The dataset is highly sparse, making recommendation modeling more challenging.
+The dataset is highly sparse, which makes recommendation modeling challenging and realistic.
 
-🔹 1️⃣ Rank-Based Recommendation
+Implemented Approaches
+1. Rank-Based Recommendation
 
-This method recommends books based on:
+Recommends books based on:
 
 Average rating
 
 Minimum number of ratings
 
-It is useful for:
+This method serves as a baseline and works well for new users (cold start problem).
 
-New users (cold start problem)
+Advantages
 
-Quick baseline recommendations
+Simple and fast
 
-Advantages:
+No similarity computation required
 
-Simple
+Scalable
 
-Fast
-
-No user similarity required
-
-Limitations:
+Limitation
 
 Not personalized
 
-🔹 2️⃣ User-Based Collaborative Filtering
+2. User-Based Collaborative Filtering
 
-This method:
+Steps:
 
-Creates a user–book interaction matrix
+Construct user–book interaction matrix
 
-Computes cosine similarity between users
+Compute cosine similarity between users
 
-Recommends books liked by similar users
+Recommend books liked by similar users
 
-Advantages:
+Advantages
 
 Personalized recommendations
 
-Intuitive similarity approach
+Intuitive similarity-based logic
 
-Limitations:
+Limitations
 
 Memory intensive
 
-Not scalable for very large datasets
+Not scalable for very large user bases
 
-🔹 3️⃣ Model-Based Collaborative Filtering (SVD)
+3. Model-Based Collaborative Filtering (SVD)
 
-This method:
+This approach uses Singular Value Decomposition (SVD) to:
 
-Applies Singular Value Decomposition (SVD)
+Learn latent user and item factors
 
-Learns latent factors
+Reconstruct predicted rating matrix
 
-Reconstructs predicted rating matrix
+Generate top-N personalized recommendations
 
-Advantages:
+Advantages
 
 Handles sparsity better
 
-More scalable
+More scalable than memory-based methods
 
-Captures hidden user–item patterns
+Captures hidden user–item interactions
 
-Evaluation:
+Evaluation Metric
 
 RMSE computed on reconstructed ratings
 
-❄️ Cold Start Problem
+Cold Start Problem
 
 The cold start problem occurs when:
 
 A new user has no rating history
 
-A new book has no ratings
+A new book has no interactions
 
-In such cases, rank-based recommendations serve as a fallback solution.
+In such cases, rank-based recommendations act as a fallback strategy.
 
-🛠 Technologies Used
+Technologies Used
 
 Python
 
@@ -130,30 +118,30 @@ Scikit-learn
 
 Google Colab
 
-🚀 How to Run
+How to Run
 
-Clone repository
+Clone the repository
 
-Place dataset inside data/
+Ensure dataset files are placed inside the data/ folder
 
-Run notebooks in order:
+Run notebooks in the following order:
 
-Rank-based
+Rank-based recommendation
 
-User-based
+User-based collaborative filtering
 
-Model-based
+Model-based collaborative filtering
 
-📌 Key Learnings
+Key Takeaways
 
-Recommender systems suffer from sparsity issues
+High sparsity significantly impacts recommendation quality.
 
-Memory-based methods are intuitive but heavy
+Memory-based collaborative filtering is intuitive but computationally expensive.
 
-Model-based approaches scale better
+Model-based approaches scale better and generalize more effectively.
 
-Cold start requires hybrid strategies
+Hybrid strategies are often required in production systems.
 
-👩‍💻 Author
+Author
 
-Vidhya
+Vidhya Walke
