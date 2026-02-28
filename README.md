@@ -122,6 +122,7 @@ In such cases, rank-based recommendation serves as a fallback solution.
 - High sparsity significantly impacts recommendation systems  
 - Memory-based methods are intuitive but computationally heavy  
 - Model-based approaches scale better  
-- Hybrid strategies are required in production systems  
+- Hybrid strategies are required in production systems
+- Data quality and preprocessing strongly influence recommendation accuracy 
 
 ---
