@@ -126,6 +126,4 @@ In such cases, rank-based recommendation serves as a fallback solution.
 
 ---
 
-## 👩‍💻 Author
-
 **Vidhya Walke**
