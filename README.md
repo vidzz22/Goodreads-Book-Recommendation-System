@@ -125,5 +125,3 @@ In such cases, rank-based recommendation serves as a fallback solution.
 - Hybrid strategies are required in production systems  
 
 ---
-
-**Vidhya Walke**
