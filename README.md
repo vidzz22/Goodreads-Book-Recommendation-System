@@ -85,7 +85,7 @@ This approach:
 
 ---
 
-## ❄️ Cold Start Problem
+## Cold Start Problem
 
 The cold start problem occurs when:
 
