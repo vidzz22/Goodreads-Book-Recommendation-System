@@ -1,180 +1,140 @@
+from src.evaluation import evaluate_model
 import streamlit as st
 import pandas as pd
-import random
 
 from src.rank_based import get_top_books
+from src.user_cf import user_cf_recommend
 from src.model_cf import train_svd, recommend_svd
 
 # ---------------------------
 # PAGE CONFIG
 # ---------------------------
-st.set_page_config(page_title="Book Recommender", layout="wide")
-
-# ---------------------------
-# CUSTOM LIGHT UI THEME
-# ---------------------------
-st.markdown("""
-<style>
-body {
-    background-color: #fdf6ec;
-}
-
-.main {
-    background-color: #fdf6ec;
-}
-
-h1 {
-    color: #5a3e2b;
-}
-
-h2, h3 {
-    color: #6b4f3b;
-}
-
-.stButton>button {
-    background-color: #d4a373;
-    color: white;
-    border-radius: 10px;
-    padding: 10px;
-    border: none;
-}
-
-.stButton>button:hover {
-    background-color: #b08968;
-}
-
-.card {
-    background-color: #faedcd;
-    padding: 15px;
-    border-radius: 15px;
-    height: 160px;
-    box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
-    transition: transform 0.2s ease;
-}
-
-.card:hover {
-    transform: scale(1.05);
-}
-
-.reason {
-    font-size: 12px;
-    color: #7f5539;
-}
-
-.section-title {
-    margin-top: 20px;
-    margin-bottom: 10px;
-}
-</style>
-""", unsafe_allow_html=True)
+st.set_page_config(page_title="Book Recommendation System", layout="wide")
 
 # ---------------------------
 # TITLE
 # ---------------------------
-st.title("📚 AI-Powered Book Recommendation Engine")
+st.title("Book Recommendation System")
 
-st.markdown("""
-A hybrid recommendation system that adapts based on user behavior,  
-similar to platforms like Netflix and Amazon.
+st.write("""
+This system recommends books using:
+- Popularity-based method
+- Collaborative Filtering (User-based)
+- Model-based approach (SVD)
 """)
 
 # ---------------------------
 # LOAD DATA
 # ---------------------------
 books = pd.read_csv("data/books.csv")
-
-# Train model (sampled)
-user_item, matrix = train_svd()
+ratings = pd.read_csv("data/ratings.csv")
 
 # ---------------------------
-# SIDEBAR (USER PROFILE)
+# SIDEBAR INPUT
 # ---------------------------
-st.sidebar.header("👤 Your Reading Profile")
+st.sidebar.header("User Input")
 
-sample_books = books["title"].dropna().tolist()[:100]
+book_list = books["title"].dropna().unique().tolist()[:100]
 
 selected_books = st.sidebar.multiselect(
-    "Select books you like",
-    sample_books
+    "Select up to 5 books",
+    book_list,
+    max_selections=5,
+    placeholder="Choose books..."
 )
 
-explore_level = st.sidebar.slider(
-    "Exploration Level",
-    0, 100, 50
-)
-
-st.sidebar.markdown("---")
-st.sidebar.caption("Higher exploration → more diverse recommendations")
-
 # ---------------------------
-# CORE LOGIC
+# DISPLAY FUNCTION
 # ---------------------------
-def generate_feed():
+def display_books(title, recs, reason):
+    st.subheader(title)
 
-    # Cold Start
-    if len(selected_books) == 0:
-        return get_top_books()
-
-    # Simulated user behavior
-    user_id = random.choice(user_item.index.tolist())
-
-    recs = recommend_svd(user_id, user_item, matrix, books)
-
-    return recs
-
-
-# ---------------------------
-# DISPLAY FUNCTION (CARDS)
-# ---------------------------
-def display_books(recs, reason):
+    if len(recs) == 0:
+        st.write("No recommendations available.")
+        return
 
     cols = st.columns(5)
 
     for i, book in enumerate(recs):
         with cols[i % 5]:
             st.markdown(f"""
-                <div class="card">
-                    <h4>📖 {book[:35]}</h4>
-                    <p class="reason">{reason}</p>
+                <div style="padding:12px;border:1px solid #ddd;border-radius:10px;height:130px;">
+                    <b>{book[:40]}</b><br>
+                    <span style="font-size:12px;color:gray;">
+                        {reason}
+                    </span>
                 </div>
             """, unsafe_allow_html=True)
 
+# ---------------------------
+# DIRECT PERSONALIZATION
+# ---------------------------
+def direct_personalization():
+
+    if len(selected_books) == 0:
+        return get_top_books()
+
+    selected_ids = books[books["title"].isin(selected_books)]["book_id"].tolist()
+
+    similar_users = ratings[
+        (ratings["book_id"].isin(selected_ids)) &
+        (ratings["rating"] >= 4)
+    ]["user_id"].unique()
+
+    if len(similar_users) == 0:
+        return get_top_books()
+
+    recs = ratings[
+        ratings["user_id"].isin(similar_users)
+    ]["book_id"].value_counts().head(10).index.tolist()
+
+    recs = [b for b in recs if b not in selected_ids]
+
+    final = books[books["book_id"].isin(recs)]["title"].tolist()
+
+    if len(final) == 0:
+        return get_top_books()
+
+    return final
+
+# ---------------------------
+# TRAIN SVD
+# ---------------------------
+user_item, matrix = train_svd()
 
 # ---------------------------
 # MAIN BUTTON
 # ---------------------------
-st.markdown("## 📌 Generate Your Feed")
+if st.button("Generate Recommendations"):
 
-if st.button("✨ Generate Recommendations"):
+    # 1. Popular
+    display_books("Trending", get_top_books(), "Popular among users")
 
-    recs = generate_feed()
+    # 2. SVD
+    if selected_books:
+        svd_recs = recommend_svd(
+            ratings["user_id"].iloc[0],
+            user_item,
+            matrix,
+            books
+        )
+        display_books("Recommended for You (SVD)", svd_recs, "Based on patterns")
+
+    # 3. User-CF
+    if selected_books:
+        cf_recs = user_cf_recommend(ratings["user_id"].iloc[1])
+        display_books("Similar Users Liked", cf_recs, "Based on similar users")
+
+    # 4. Direct Personalization
+    dp_recs = direct_personalization()
+    display_books("Based on Your Selection", dp_recs, "From your input")
 
     # ---------------------------
-    # SECTIONS (LIKE NETFLIX)
+    # SIMPLE EVALUATION
     # ---------------------------
+    st.markdown("---")
+    st.subheader("Model Evaluation")
 
-    st.markdown("### 🔥 Trending Now")
-    display_books(get_top_books(), "Popular among all readers")
+    precision = evaluate_model()
 
-    st.markdown("### 🎯 Recommended for You")
-    reason = "Based on your selected preferences" if selected_books else "General popular trends"
-    display_books(recs, reason)
-
-    st.markdown("### 🧠 Because Similar Users Liked")
-    display_books(generate_feed(), "Derived from similar user behavior")
-
-# ---------------------------
-# EXPLANATION SECTION
-# ---------------------------
-st.markdown("---")
-st.markdown("## 🧠 How This System Works")
-
-st.info("""
-This system uses a **Hybrid Recommendation Strategy**:
-
-• **Cold Start** → Uses popularity-based ranking when no user data is available  
-• **Collaborative Filtering** → Finds users with similar behavior  
-• **SVD (Matrix Factorization)** → Learns hidden patterns between users and books  
-
-📌 The system dynamically adapts based on user interaction and available data.
-""")
+    st.write(f"Precision@K: {precision}")

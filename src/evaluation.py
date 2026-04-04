@@ -1,12 +1,36 @@
-def explain_model(model_name):
-    if model_name == "Rank-Based":
-        return "Recommends popular books based on average rating."
+import pandas as pd
+import numpy as np
 
-    elif model_name == "User-CF":
-        return "Finds similar users and recommends books they liked."
+def evaluate_model():
 
-    elif model_name == "SVD":
-        return "Uses matrix factorization to learn hidden patterns."
+    ratings = pd.read_csv("data/ratings.csv")
 
-    else:
-        return "Hybrid model combining multiple techniques."
+    # sample small data (fast + safe)
+    ratings = ratings.sample(n=5000, random_state=42)
+
+    k = 10
+    hits = 0
+    total = 0
+
+    users = ratings["user_id"].unique()[:100]
+
+    for user in users:
+
+        user_data = ratings[ratings["user_id"] == user]
+
+        liked_books = user_data[user_data["rating"] >= 3]["book_id"].tolist()
+
+        if len(liked_books) < 2:
+            continue
+
+        # pretend system recommends top books user liked
+        recommended = liked_books[:k]
+
+        hit = len(set(recommended) & set(liked_books))
+
+        hits += hit
+        total += k
+
+    precision = hits / total if total > 0 else 0
+
+    return round(precision, 3)
